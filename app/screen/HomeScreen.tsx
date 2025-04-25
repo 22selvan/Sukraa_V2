@@ -9,6 +9,8 @@ import {
     FlatList,
     Image,
     Dimensions,
+    Pressable,
+    Platform,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import { IMAGES } from '../utils/SharedImages';
@@ -20,10 +22,27 @@ const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 const ITEM_MARGIN = 6;
 const NUM_COLUMNS = 3;
 const ITEM_WIDTH = (screenWidth - ITEM_MARGIN * (NUM_COLUMNS - 1)) / NUM_COLUMNS;
+import { useNavigation } from '@react-navigation/native';
+import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
+
+const { width, height } = Dimensions.get('window');
+
 
 const slides = [
     { id: '1', title: 'Schedule Your Health Test Now!', subtitle: 'Home sample collection & certified lab results.' },
     { id: '2', title: 'Special Offers', subtitle: 'Get 20% off on all health packages' },
+    {
+        id: '1',
+        image:IMAGES.Dr,
+        title: 'Schedule Your Health Test Now!',
+        subtitle: 'Home sample collection & certified lab results.',
+    },
+    {
+        id: '2',
+        image: IMAGES.Dr,
+        title: 'Special Offers',
+        subtitle: 'Get 20% off on all health packages',
+    },
 ];
 
 const frequentTests = [
@@ -32,6 +51,11 @@ const frequentTests = [
     { id: '3', name: 'Pancreatitis', color: '#87C699', backgroundColor: "#E8FFF3" },
     { id: '4', name: 'Blood sugar', color: '#D9524F', backgroundColor: "#FFF5F8" },
     { id: '5', name: 'Thyroid test', color: '#F89C47', backgroundColor: "#FFF9F4" },
+    { id: '1', name: 'Fever', image:IMAGES.Thermometer, color: '#FFD596',backgroundColor:"#FFF8DD" },
+    { id: '2', name: 'Urine Test', image:IMAGES.urine, color: '#9EB5F9',backgroundColor:"#F1FAFF" },
+    { id: '3', name: 'Pancreatitis', image:IMAGES.Pancreatitis, color: '#87C699',backgroundColor:"#E8FFF3"  },
+    { id: '4', name: 'Blood sugar', image:IMAGES.blood, color: '#D9524F',backgroundColor:"#FFF5F8"  },
+    { id: '5', name: 'Thyroid test', image:IMAGES.Thyroidtest, color: '#F89C47',backgroundColor:"#FFF9F4"  },
 ];
 
 const healthPackages = [
@@ -41,8 +65,18 @@ const healthPackages = [
 
 const forWhom = ['Add new', 'Myself', 'Mother', 'Father',];
 const relationNameMap = { 'Myself': 'You', 'Mother': 'Sudari', 'Father': 'Ravi' };
+const forWhom = ['Add new', 'Myself', 'Mother', 'Father'];
+
+const relationNameMap: Record<'Myself' | 'Mother' | 'Father', string> = {
+    'Myself': 'You',
+    'Mother': '',
+    'Father': 'Ravi',
+};
 
 const HomeScreen = ({ navigation }: any) => {
+const HomeScreen = () => {
+    const navigation = useNavigation()
+    const [activeSlide, setActiveSlide] = useState(0);
     const [selectedPerson, setSelectedPerson] = useState('Mother');
     const [paymentMethod, setPaymentMethod] = useState('Cash');
     const [activeSlide, setActiveSlide] = useState(0);
@@ -130,8 +164,11 @@ const HomeScreen = ({ navigation }: any) => {
                     renderItem={renderItem}
                     keyExtractor={item => item}
                 />
-                {selectedPerson && relationNameMap[selectedPerson] &&
-                    <Text style={styles.selectionName}>{relationNameMap[selectedPerson]}</Text>}
+                {selectedPerson && relationNameMap[selectedPerson] && (
+                    <Text style={styles.selectionName}>
+                        {relationNameMap[selectedPerson]}
+                    </Text>
+                )}
 
                 <View>
                     <Text style={styles.sectionTitle}>Payer</Text>
@@ -161,32 +198,57 @@ const HomeScreen = ({ navigation }: any) => {
                             />
                         }
                     >
+                {/* Search */}
+                    <Pressable onPress={() => navigation.navigate('BookingTest')}>
+                            <View style={styles.searchContainer}>
+                                <Image
+                                source={IMAGES.Search}
+                                resizeMode="contain"
+                                />
+                                <TextInput
+                                style={styles.searchInput}
+                                placeholder="Search for tests or health packages"
+                                placeholderTextColor="#7E8299"
+                                editable={false} // Makes the input non-interactive
+                                pointerEvents="none" 
+                                />
+                                <Image
+                                source={IMAGES.searchInsta}
+                                resizeMode="contain"
+                                />
+                            </View>
+                    </Pressable>
+
+                {/* Slides */}
+                <FlatList
+                    data={slides}
+                    horizontal
+                    pagingEnabled
+                    showsHorizontalScrollIndicator={false}
+                    onMomentumScrollEnd={e => {
+                        const newIndex = Math.round(e.nativeEvent.contentOffset.x / width);
+                        setActiveSlide(newIndex);
+                    }
+                    }
+                    renderItem={({ item }) => (
                         <LinearGradient
                             colors={['#1E3989', '#9B71AA', '#87C699']}
                             start={{ x: 0, y: 0 }}
-                            end={{ x: 1, y: 1 }}
-                            style={{ width: 20, height: 20 }}
-                        />
-                    </MaskedView>
-                </View>
+                            end={{ x: 1, y: 0 }}
+                            style={styles.slide}
+                        >
+                            <View style={styles.slideRow}>
+                                {/* Left Image */}
+                                {/* <Image source={item.image} style={styles.slideImage} /> */}
 
-                <ScrollView
-                    ref={scrollViewRef}
-                    horizontal
-                    showsHorizontalScrollIndicator={false}
-                    onScroll={handleScroll}
-                    scrollEventThrottle={16}
-                >
-                    {slides.map((slide) => (
-                        <LinearGradient key={slide.id} colors={['#1E3989', '#9B71AA', '#87C699']} start={{ x: 0, y: 0 }}
-                            end={{ x: 1, y: 1 }} style={styles.slideCard}>
-                            <Image source={IMAGES.Doctor} style={styles.slideImage} />
-                            <View style={styles.slideContent}>
-                                <Text style={styles.doctorTitle}>{slide.title}</Text>
-                                <Text style={styles.doctorSubtitle}>{slide.subtitle}</Text>
-                                <TouchableOpacity style={styles.bookButton}>
-                                    <Text style={styles.bookButtonText}>Book Now</Text>
-                                </TouchableOpacity>
+                                {/* Right Content */}
+                                <View style={styles.slideContent}>
+                                    <Text numberOfLines={2} ellipsizeMode="tail" style={styles.slideTitle}>{item.title}</Text>
+                                    <Text numberOfLines={2} ellipsizeMode="tail" style={styles.slideSubtitle}>{item.subtitle}</Text>
+                                    <TouchableOpacity style={styles.bookButton}>
+                                        <Text style={styles.bookButtonText}>Book Now</Text>
+                                    </TouchableOpacity>
+                                </View>
                             </View>
                         </LinearGradient>
                     ))}
@@ -221,13 +283,63 @@ const HomeScreen = ({ navigation }: any) => {
                 <View style={styles.packageSection}>
                     <View style={styles.packageHeader}>
                         <Text style={styles.sectionTitle}>Health Check Package</Text>
-                        <TouchableOpacity><Text style={styles.viewMore}>View More</Text></TouchableOpacity>
+                        <TouchableOpacity>
+                            <Text style={styles.viewMore}>View More</Text>
+                        </TouchableOpacity>
                     </View>
                     <FlatList
                         data={healthPackages}
                         horizontal
                         showsHorizontalScrollIndicator={false}
-                        renderItem={renderPackageItem}
+                        renderItem={({ item }) => (
+                            <View style={styles.packageCard}>
+                                {item.recommended && (
+                                    <View style={styles.recommendedBadge}>
+                                        <Text style={{ color: '#fff', fontSize: 12 }}>
+                                            Recommended For You
+                                        </Text>
+                                    </View>
+                                )}
+                                <View style={styles.contentContainer}>
+                                    <View>
+                                        <Text style={styles.title}>{item.title}</Text>
+                                        <View style={styles.sampleInfo}>
+                                            {/* <MaterialIcons name="home" size={14} color="#666" /> */}
+                                            <Text style={styles.sampleText}>{item.description}</Text>
+                                            <View
+                                                style={{
+                                                    flexDirection: 'row',
+                                                    backgroundColor: '#fff',
+                                                    marginVertical: 10,
+                                                    borderRadius: 10,
+                                                    paddingHorizontal: 8,
+                                                }}>
+                                                {/* <Image
+                          source={require('../assets/testtube.png')}
+                          style={styles.testTubeIcon}
+                        /> */}
+                                                <Text style={styles.timeText}>{item.tests}</Text>
+                                            </View>
+                                        </View>
+                                    </View>
+                                    <View style={styles.priceContainer}>
+                                        <TouchableOpacity>
+                                            <LinearGradient
+                                                colors={['#1E3989', '#9B71AA', '#87C699']}
+                                                start={{ x: 0, y: 0 }}
+                                                end={{ x: 1, y: 0 }}
+                                                style={styles.addButton}>
+                                                <Text style={styles.buttonText}>Add to Lab</Text>
+                                            </LinearGradient>
+                                        </TouchableOpacity>
+                                        <View>
+                                            <Text style={styles.price}>SAR {item.price}</Text>
+                                            <Text style={styles.originalPrice}>SAR2499</Text>
+                                        </View>
+                                    </View>
+                                </View>
+                            </View>
+                        )}
                         keyExtractor={item => item.id}
                     />
                 </View>
@@ -239,70 +351,385 @@ const HomeScreen = ({ navigation }: any) => {
 export default HomeScreen;
 
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: '#fff', paddingHorizontal: 10 },
-    searchContainer: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 100, marginTop: 15, borderColor: '#EFF2F5', borderWidth: 1 },
-    searchInput: { flex: 1, fontSize: 14, fontWeight: '500', lineHeight: 16, color: '#7E8299', fontFamily: FONT_FAMILY.fontFamilyAnekLatinMedium },
-    searchIcon: { tintColor: '#82869D', width: 16, height: 16, marginHorizontal: 6, resizeMode: 'contain' },
-    pagination: { flexDirection: 'row', justifyContent: 'center', marginTop: 10 },
-    paginationDot: { width: 8, height: 8, borderRadius: 100, marginHorizontal: 3 },
-    sectionTitle: { color: "#00071A", fontSize: 18, fontWeight: '500', marginVertical: 6, fontFamily: FONT_FAMILY.fontFamilyAnekLatinSemiBold },
-    personButton: { flexDirection: "row", borderRadius: 100, backgroundColor: '#f0f0f0', paddingHorizontal: 16, paddingVertical: 8, marginHorizontal: 4 },
-    personButtonActive: { backgroundColor: '#1E3989' },
-    personButtonText: { fontSize: 14, color: '#3F4254', fontWeight: '400', fontFamily: FONT_FAMILY.fontFamilyAnekLatinMedium },
-    personButtonTextActive: { color: '#fff' },
-    personButtonContent: { flexDirection: 'row', alignItems: 'center' },
-    addIcon: { width: 10, height: 10, resizeMode: 'contain', marginRight: 4, tintColor: '#3F4254' },
-    selectionName: { fontWeight: '500', fontSize: 14, color: "#1E3989", fontFamily: FONT_FAMILY.fontFamilyAnekLatinMedium },
-    paymentButtons: { flexDirection: 'row' },
-    paymentButton: { paddingHorizontal: 16, paddingVertical: 8, borderRadius: 100, backgroundColor: '#F1FAFF', marginHorizontal: 4 },
-    paymentButtonActive: { backgroundColor: '#1E3989' },
-    paymentButtonText: { fontSize: 14, color: '#3F4254', fontWeight: '500', fontFamily: FONT_FAMILY.fontFamilyAnekLatinMedium },
-    paymentButtonTextActive: { color: '#fff' },
-    testContainer: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', paddingHorizontal: ITEM_MARGIN },
-    testItemInner: { flexDirection: 'row', alignItems: 'center', paddingVertical: 4, paddingHorizontal: 10, borderRadius: 100, shadowColor: '#000', elevation: 2 },
-    iconContainer: { width: 20, height: 20, borderRadius: 100, justifyContent: 'center', alignItems: 'center', marginRight: 6 },
-    iconImage: { width: 14, height: 14, resizeMode: 'contain' },
-    testLabel: { fontSize: 14, color: '#3F4254', fontWeight: '500', fontFamily: FONT_FAMILY.fontFamilyAnekLatinMedium },
-    packageSection: { marginVertical: 15 },
-    packageHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', },
-    viewMore: { color: '#2376F9', fontSize: 12, fontWeight: '500', fontFamily: FONT_FAMILY.fontFamilyAnekLatinMedium },
-    packageCard: { width: screenWidth * 0.8, padding: 10, borderRadius: 6, marginRight: 12, backgroundColor: '#C8DFFF' },
-    recommendedBadge: { position: "absolute", backgroundColor: '#1E3989', padding: 3, borderTopLeftRadius: 8, borderBottomRightRadius: 8, alignSelf: 'flex-start' },
-    recommendedText: { color: '#FFFFFF', fontSize: 10, fontWeight: '500', fontFamily: FONT_FAMILY.fontFamilyAnekLatinMedium },
-    contentContainer: { flex: 1 },
-    title: { fontSize: 18, fontWeight: '600', color: '#00071A', marginTop: 8, fontFamily: FONT_FAMILY.fontFamilyAnekLatinSemiBold },
-    sampleInfo: { flexDirection: 'row', alignItems: 'center', gap: 3 },
-    sampleText: { fontSize: 14, color: '#3F4254', fontWeight: '400', fontFamily: FONT_FAMILY.fontFamilyAnekLatinMedium },
-    testCountContainer: { flexDirection: 'row', backgroundColor: '#F1FAFF', marginVertical: 8, borderRadius: 100, paddingHorizontal: 6 },
-    timeText: { fontSize: 10, color: '#00071A', fontWeight: '400', fontFamily: FONT_FAMILY.fontFamilyAnekLatinMedium },
-    priceContainer: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 3 },
-    priceRow: {
+    container: {
+        flex: 1,
+        backgroundColor: '#fff',
+        paddingHorizontal: 20
+    },
+    header: {
+        // flexDirection: 'row',
+        // justifyContent: 'space-between',
+        // alignItems: 'flex-start',
+        // padding: 10,
+        backgroundColor: '#fff',
+        // paddingTop: Platform.OS === 'web' ? 16 : 48,
+    },
+    locationContainer: {
         flexDirection: 'row',
         alignItems: 'center',
-        marginTop: 4,
     },
-    price: { fontSize: 14, fontWeight: '700', marginRight: 6, color: '#000000', fontFamily: FONT_FAMILY.fontFamilyAnekLatinSemiBold },
-    originalPrice: { fontSize: 12, color: '#000000', textDecorationLine: 'line-through', fontFamily: FONT_FAMILY.fontFamilyAnekLatinMedium },
-    addButton: { borderRadius: 100, width: 80, height: 30, alignItems: 'center', justifyContent: 'center' },
-    buttonText: { color: 'white', fontSize: 10, fontWeight: '600', fontFamily: FONT_FAMILY.fontFamilyAnekLatinMedium },
-    slideCard: { marginTop: 15, flexDirection: 'row', borderRadius: 10, marginRight: 12, maxWidth: screenWidth * 0.85, minWidth: 260, },
-    slideImage: { width: 90, height: 110, resizeMode: 'contain' },
-    slideContent: { flex: 1, justifyContent: 'center', padding: 8 },
-    doctorTitle: { fontSize: 20, fontWeight: '600', color: '#FFFFFF', flexWrap: 'wrap', fontFamily: FONT_FAMILY.fontFamilyAnekLatinMedium },
-    doctorSubtitle: { fontSize: 10, fontWeight: '500', color: '#FFFFFF', marginTop: 3, flexWrap: 'wrap' },
-    bookButton: {
-        backgroundColor: '#EFF2F5',
-        paddingVertical: 4,
-        paddingHorizontal: 10,
+    locationIconWrapper: {
+        width: 32,
+        height: 32,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginRight: 4,
+    },
+    locationTextContainer: {
+        flexDirection: 'column',
+    },
+    locationCity: {
+        fontSize: 16,
+        fontWeight: '500',
+        color: '#00071A',
+        lineHeight: 20,
+    },
+    locationCountry: {
+        fontSize: 16,
+        fontWeight: '500',
+        color: '#00071A',
+        lineHeight: 20,
+    },
+    headerIcons: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 8,
+    },
+    iconButton: {
+        padding: 4,
+    },
+    iconCircle: {
+        width: 22,
+        height: 16,
         borderRadius: 100,
+        backgroundColor: '#EFF2F5',
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: 10
+    },
+    testIcon: {
+        width: 50,
+        height: 50,
+        borderRadius: 25,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginBottom: 8,
+    },
+
+    testImage: {
+        width: 24,
+        height: 24,
+    },
+    searchContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        margin: 10,
+        padding: 12,
+        backgroundColor: '#fff',
+        borderRadius: 30,
+        borderWidth: 1,
+        borderColor: "#EFF2F5"
+    },
+    searchInput: {
+        flex: 1,
+        marginLeft: 8,
+        fontSize: 16,
+
+    },
+    slide: {
+        width: width - 68,
+        height: 180,
+        borderRadius: 12,
+        overflow: 'hidden',
+        padding: 8,
+        marginHorizontal: 16,
+        marginVertical: 10,
+    },
+
+    slideRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+
+    slideImage: {
+        width: 150,
+        height: 150,
+        resizeMode: 'cover',
+        // marginRight: 16,
+    },
+
+    slideContent: {
+        flex: 1,
+        justifyContent: 'center',
+    },
+
+    slideTitle: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        color: '#fff',
+        marginBottom: 4,
+        flexWrap: 'wrap',
+    },
+
+    slideSubtitle: {
+        fontSize: 14,
+        color: '#f0f0f0',
+        marginBottom: 12,
+        flexWrap: 'wrap',
+
+    },
+
+    bookButton: {
+        backgroundColor: '#fff',
+        paddingVertical: 8,
+        paddingHorizontal: 16,
+        borderRadius: 20,
         alignSelf: 'flex-start',
         marginTop: 3
     },
     bookButtonText: {
         color: '#1E3989',
-        fontWeight: '600',
-        fontSize: 10,
-        fontFamily: FONT_FAMILY.fontFamilyAnekLatinMedium
+        fontWeight: 'bold',
     }
-});
+    ,
+    pagination: {
+        flexDirection: 'row',
+        justifyContent: 'center',
+        marginTop: 16,
+    },
+    paginationDot: {
+        width: 8,
+        height: 8,
+        borderRadius: 4,
+        backgroundColor: '#ccc',
+        marginHorizontal: 4,
+    },
+    paginationDotActive: {
+        backgroundColor: '#333',
+    },
+    sectionTitle: {
+        color: "#00071A",
+        fontSize: 20,
+        fontWeight: 'bold',
+        marginTop: 8,
+        marginBottom: 10,
+    },
+    personButton: {
+        flexDirection: "row",
+        paddingHorizontal: 16,
+        paddingVertical: 8,
+        borderRadius: 20,
+        marginRight: 8,
+        backgroundColor: '#F1FAFF',
+    },
+    personButtonActive: {
+        backgroundColor: '#1E3989',
+    },
+    personButtonText: {
+        fontSize: 16,
+        color: '#3F4254',
+    },
+    personButtonTextActive: {
+        color: '#fff',
+    },
+    selectionName: {
+        fontWeight: 'bold',
+        fontSize: 16,
+        color: "#1E3989"
+    },
+    paymentSection: {
+        // marginTop: 14,
+    },
+    paymentButtons: {
+        flexDirection: 'row',
+        // marginHorizontal: 16,
+    },
+    paymentButton: {
+        // paddingHorizontal: 24,
+        // paddingVertical: 12,
+        width: 82,
+        height: 44,
+        borderRadius: 20,
+        marginRight: 12,
+        backgroundColor: '#F1FAFF',
+    },
+    paymentButtonActive: {
+        backgroundColor: '#1E3989',
+    },
+    paymentButtonText: {
+        fontSize: 16,
+        color: '#333',
+    },
+    paymentButtonTextActive: {
+        color: '#fff',
+    },
+    frequentTests: {
+        paddingHorizontal: 16,
+        flexWrap: "wrap-reverse",
+    },
+    testItem: {
+        marginRight: 10,
+        marginVertical: 5,
+        flexDirection: "row",
+    },
+    testItemInner: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: 'white',
+        paddingVertical: 5,
+        paddingHorizontal: 8,
+        borderRadius: 30,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 1 },
+        // shadowOpacity: 0.1,
+        shadowRadius: 2,
+        elevation: 2,
+    },
+    iconContainer: {
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginRight: 8,
+    },
+    testLabel: {
+        fontSize: 14,
+        color: '#333',
+        fontWeight: '500',
+    },
 
+    testIcon: {
+        width: 56,
+        height: 56,
+        borderRadius: 28,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginBottom: 8,
+    },
+    testName: {
+        fontSize: 14,
+        color: '#333',
+        textAlign: 'center',
+    },
+    packageSection: {
+        marginTop: 24,
+        marginBottom: 24,
+    },
+    packageHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginRight: 16,
+    },
+    viewMore: {
+        color: '#2376F9',
+        fontSize: 16,
+    },
+    packageCard: {
+        width: width - 100,
+        marginHorizontal: 8,
+        padding: 16,
+        backgroundColor: '#C8DFFF',
+        borderRadius: 12,
+        marginBottom: 16,
+    },
+    recommendedBadge: {
+        position: "absolute",
+        backgroundColor: '#1E3989',
+        paddingHorizontal: 10,
+        paddingVertical: 3,
+        borderTopLeftRadius: 10,
+        borderBottomRightRadius: 10,
+        alignSelf: 'flex-start',
+        // marginBottom: 12,
+
+    },
+    recommendedText: {
+        fontSize: 11,
+        fontWeight: '600',
+        textAlign: "center"
+    },
+
+    // PackageScreen
+    recommendedText: {
+        fontSize: 18,
+        fontWeight: '600',
+        color: '#333',
+        marginBottom: 16,
+    },
+    card: {
+        backgroundColor: 'white',
+        borderRadius: 12,
+        padding: 16,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 8,
+        elevation: 3,
+    },
+    contentContainer: {
+        gap: 12,
+    },
+    title: {
+        fontSize: 16,
+        fontWeight: '600',
+        color: '#00071A',
+        marginTop: 20,
+        marginBottom: 8,
+    },
+    sampleInfo: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 4,
+    },
+    sampleText: {
+        fontSize: 13,
+        color: '#3F4254',
+    },
+    dotContainer: {
+        paddingHorizontal: 8,
+        justifyContent: 'center',
+    },
+    dot: {
+        width: 3,
+        height: 3,
+        borderRadius: 1.5,
+        backgroundColor: '#666',
+    },
+    testTubeIcon: {
+        width: 15,
+        height: 15,
+        resizeMode: "contain"
+    },
+    timeText: {
+        fontSize: 13,
+        color: '#00071A',
+    },
+    priceContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginTop: 4,
+    },
+    price: {
+        fontSize: 16,
+        fontWeight: '600',
+        color: '#333',
+    },
+    originalPrice: {
+        fontSize: 13,
+        color: '#666',
+        textDecorationLine: 'line-through',
+    },
+    addButton: {
+        borderRadius: 30,
+        padding: 14,
+        alignItems: 'center',
+    },
+    buttonText: {
+        color: 'white',
+        fontSize: 14,
+        fontWeight: '600',
+    },
+});
