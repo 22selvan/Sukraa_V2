@@ -50,8 +50,6 @@ export const IMAGES = {
     Pdf: require('../assets/images/pdf.png'),
     BookSummary: require('../assets/images/bookSummary.png'),
     Star:require('../assets/images/star.png'),
-    Add:require('../assets/images/add.png'),
-    Search:require('../assets/images/search.png'),
     bloodDrop:require('../assets/images/bloodDrop.png'),
     blood:require('../assets/images/blood.png'),
     Colon:require('../assets/images/Colon.png'),
